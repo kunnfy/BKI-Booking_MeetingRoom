@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <title>ระบบจองห้องประชุม BKI-Meeting Room</title>
+  <link href="https://fonts.googleapis.com/css2?family=Kanit&display=swap" rel="stylesheet">
+
+  <!-- FullCalendar -->
+  <link href='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.css' rel='stylesheet' />
+  <script src='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.js'></script>
+
+  <style>
+    body {
+      font-family: 'Kanit', sans-serif;
+      background: linear-gradient(135deg, #f09433, #e6683c, #dc2743, #cc2366, #bc1888);
+      color: #333;
+      margin: 0; padding: 0;
+    }
+    .container {
+      max-width: 900px; margin: 20px auto;
+      background: #fff; border-radius: 15px; padding: 20px;
+      box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+    }
+    h1 { text-align: center; margin-bottom: 20px; }
+    label { display: block; margin-top: 10px; }
+    select, input {
+      width: 100%; padding: 8px; margin-top: 5px;
+      border-radius: 5px; border: 1px solid #ccc;
+    }
+    button {
+      margin-top: 15px; padding: 10px 20px;
+      border: none; background: #e6683c; color: white;
+      border-radius: 5px; cursor: pointer; font-size: 16px;
+    }
+    button:hover { background: #dc2743; }
+    #calendar { margin-top: 30px; }
+    #status { margin-top: 15px; font-weight: bold; }
+  </style>
+</head>
+<body>
+<div class="container">
+  <h1>ระบบจองห้องประชุม BKI-Meeting Room</h1>
+
+  <label>เลือกห้องประชุม</label>
+  <select id="room">
+    <option value="">-- เลือกห้อง --</option>
+    <option>ห้องประชุมชั้น 4</option>
+    <option>ห้องประชุม 3</option>
+    <option>ห้องประชุม 2</option>
+    <option>ห้องประชุม 1</option>
+    <option>ห้องประชุมนิทรรศการ</option>
+    <option>ห้องประชุมวิจัย</option>
+    <option>ห้องสมุดฯ</option>
+  </select>
+
+  <label>เลือกวันที่</label>
+  <input type="date" id="date">
+
+  <label>เวลาเริ่มจอง</label>
+  <select id="startTime"><option value="">-- เลือกเวลา --</option></select>
+
+  <label>เวลาจบ</label>
+  <select id="endTime"><option value="">-- เลือกเวลา --</option></select>
+
+  <label>ชื่อผู้จอง</label>
+  <input type="text" id="name" placeholder="ชื่อผู้จอง">
+
+  <label>เบอร์ติดต่อกลับ</label>
+  <input type="text" id="phone" placeholder="เบอร์โทร">
+
+  <button onclick="submitReservation()">จองห้อง</button>
+  <div id="status"></div>
+
+  <div id="calendar"></div>
+</div>
+
+<script>
+  let calendar;
+
+  function generateHalfHourSlots() {
+    const slots = [];
+    for (let h = 8; h <= 17; h++) {
+      slots.push(`${String(h).padStart(2,'0')}:00`);
+      if (h !== 17) slots.push(`${String(h).padStart(2,'0')}:30`);
+    }
+    return slots;
+  }
+
+  function updateTimes() {
+    const startSelect = document.getElementById('startTime');
+    const endSelect = document.getElementById('endTime');
+    startSelect.innerHTML = '<option value="">-- เลือกเวลา --</option>';
+    endSelect.innerHTML = '<option value="">-- เลือกเวลา --</option>';
+
+    const slots = generateHalfHourSlots();
+    slots.forEach(slot => {
+      const option = document.createElement('option');
+      option.value = slot;
+      option.text = slot;
+      startSelect.add(option);
+
+      const opt2 = document.createElement('option');
+      opt2.value = slot;
+      opt2.text = slot;
+      endSelect.add(opt2);
+    });
+  }
+
+  function updateEndTimes() {
+    const startTime = document.getElementById('startTime').value;
+    const endSelect = document.getElementById('endTime');
+    if (!startTime) return;
+
+    const slots = generateHalfHourSlots();
+    endSelect.innerHTML = '<option value="">-- เลือกเวลา --</option>';
+    const startIndex = slots.indexOf(startTime);
+
+    for (let i = startIndex + 1; i < slots.length; i++) {
+      const option = document.createElement('option');
+      option.value = slots[i];
+      option.text = slots[i];
+      endSelect.add(option);
+    }
+  }
+
+  function submitReservation() {
+    const data = {
+      room: document.getElementById('room').value,
+      date: document.getElementById('date').value,
+      startTime: document.getElementById('startTime').value,
+      endTime: document.getElementById('endTime').value,
+      name: document.getElementById('name').value,
+      phone: document.getElementById('phone').value
+    };
+
+    if (!data.room || !data.date || !data.startTime || !data.endTime || !data.name || !data.phone) {
+      document.getElementById('status').innerText = '❌ กรุณากรอกข้อมูลให้ครบทุกช่อง';
+      return;
+    }
+
+    document.getElementById('status').innerText = 'กำลังบันทึก...';
+
+    google.script.run.withSuccessHandler(function(res) {
+      if (res.status === 'success') {
+        document.getElementById('status').innerText = '✅ จองห้องสำเร็จ';
+        loadCalendar();
+      } else {
+        document.getElementById('status').innerText = '❌ ' + res.message;
+      }
+    }).saveReservation(data);
+  }
+
+  function loadCalendar() {
+    const room = document.getElementById('room').value;
+    const date = document.getElementById('date').value;
+    if (!room || !date) return;
+
+    google.script.run.withSuccessHandler(function(reservations){
+      const events = [];
+      reservations.filter(r => r.room === room).forEach(r => {
+        events.push({
+          title: `จองแล้ว: ${r.name}`,
+          start: `${date}T${r.start}`,
+          end: `${date}T${r.end}`,
+          color: 'red'
+        });
+      });
+
+      const calendarEl = document.getElementById('calendar');
+      if(calendar) calendar.destroy();
+      calendar = new FullCalendar.Calendar(calendarEl, {
+        initialView: 'timeGridDay',
+        slotMinTime: '08:00:00',
+        slotMaxTime: '17:00:00',
+        allDaySlot: false,
+        events: events
+      });
+      calendar.render();
+    }).getReservationsByDate(date);
+  }
+
+  document.getElementById('room').addEventListener('change', ()=>{ updateTimes(); loadCalendar(); });
+  document.getElementById('date').addEventListener('change', ()=>{ updateTimes(); loadCalendar(); });
+  document.getElementById('startTime').addEventListener('change', updateEndTimes);
+
+  updateTimes();
+</script>
+</body>
+</html>
