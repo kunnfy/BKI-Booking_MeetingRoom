@@ -1,189 +1,482 @@
 <!DOCTYPE html>
-<html lang="th">
+<html>
 <head>
+  <base target="_top">
   <meta charset="UTF-8">
-  <title>ระบบจองห้องประชุม BKI-Meeting Room</title>
-  <link href="https://fonts.googleapis.com/css2?family=Kanit&display=swap" rel="stylesheet">
-
-  <!-- FullCalendar -->
-  <link href='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.css' rel='stylesheet' />
-  <script src='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.js'></script>
-
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ระบบจองห้องประชุม - noobitguy</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600&display=swap" rel="stylesheet">
   <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    
     body {
       font-family: 'Kanit', sans-serif;
-      background: linear-gradient(135deg, #f09433, #e6683c, #dc2743, #cc2366, #bc1888);
-      color: #333;
-      margin: 0; padding: 0;
+      min-height: 100vh;
+      background: linear-gradient(45deg, #f09433 0%, #e6683c 25%, #dc2743 50%, #cc2366 75%, #bc1888 100%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
     }
+    
     .container {
-      max-width: 900px; margin: 20px auto;
-      background: #fff; border-radius: 15px; padding: 20px;
-      box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+      width: 100%;
+      max-width: 480px;
+      background: #ffffff;
+      border-radius: 20px;
+      padding: 40px 30px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
+      animation: fadeIn 0.5s ease-out;
     }
-    h1 { text-align: center; margin-bottom: 20px; }
-    label { display: block; margin-top: 10px; }
-    select, input {
-      width: 100%; padding: 8px; margin-top: 5px;
-      border-radius: 5px; border: 1px solid #ccc;
+    
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+        transform: translateY(20px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
     }
+    
+    h1 {
+      text-align: center;
+      font-size: 28px;
+      font-weight: 600;
+      background: linear-gradient(135deg, #f09433 0%, #dc2743 50%, #bc1888 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      margin-bottom: 8px;
+    }
+    
+    .subtitle {
+      text-align: center;
+      font-size: 16px;
+      font-weight: 300;
+      color: #666;
+      margin-bottom: 30px;
+    }
+    
+    .form-group {
+      margin-bottom: 20px;
+    }
+    
+    label {
+      display: block;
+      font-size: 14px;
+      font-weight: 500;
+      color: #333;
+      margin-bottom: 8px;
+    }
+    
+    label span {
+      color: #dc2743;
+    }
+    
+    input, select {
+      width: 100%;
+      padding: 12px 16px;
+      border: 2px solid #e0e0e0;
+      background: #ffffff;
+      border-radius: 10px;
+      font-family: 'Kanit', sans-serif;
+      font-size: 15px;
+      transition: all 0.3s ease;
+      color: #333;
+    }
+    
+    input:focus, select:focus {
+      outline: none;
+      background: white;
+      border-color: #dc2743;
+      box-shadow: 0 0 0 3px rgba(220, 39, 67, 0.1);
+    }
+    
+    input::placeholder {
+      color: #999;
+      font-weight: 300;
+    }
+    
+    option {
+      color: #333;
+      font-weight: 400;
+    }
+    
+    input:disabled, select:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+      background: #fafafa;
+    }
+    
     button {
-      margin-top: 15px; padding: 10px 20px;
-      border: none; background: #e6683c; color: white;
-      border-radius: 5px; cursor: pointer; font-size: 16px;
+      width: 100%;
+      padding: 14px;
+      background: linear-gradient(135deg, #f09433 0%, #dc2743 50%, #bc1888 100%);
+      color: white;
+      border: none;
+      border-radius: 10px;
+      font-family: 'Kanit', sans-serif;
+      font-size: 16px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      margin-top: 10px;
+      box-shadow: 0 4px 15px rgba(220, 39, 67, 0.3);
     }
-    button:hover { background: #dc2743; }
-    #calendar { margin-top: 30px; }
-    #status { margin-top: 15px; font-weight: bold; }
+    
+    button:hover:not(:disabled) {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 25px rgba(220, 39, 67, 0.4);
+    }
+    
+    button:active:not(:disabled) {
+      transform: translateY(0);
+    }
+    
+    button:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+    
+    .loading {
+      display: none;
+      text-align: center;
+      margin-top: 20px;
+    }
+    
+    .spinner {
+      width: 40px;
+      height: 40px;
+      margin: 0 auto 10px;
+      border: 3px solid rgba(220, 39, 67, 0.2);
+      border-top-color: #dc2743;
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+    
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+    
+    .loading p {
+      color: #666;
+      font-weight: 300;
+    }
+    
+    .message {
+      padding: 12px 16px;
+      margin-top: 20px;
+      border-radius: 10px;
+      text-align: center;
+      display: none;
+      font-size: 14px;
+      animation: slideIn 0.3s ease-out;
+    }
+    
+    @keyframes slideIn {
+      from {
+        opacity: 0;
+        transform: translateY(-10px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+    
+    .success {
+      background: #d4edda;
+      color: #155724;
+      border: 1px solid #c3e6cb;
+    }
+    
+    .error {
+      background: #f8d7da;
+      color: #721c24;
+      border: 1px solid #f5c6cb;
+    }
+    
+    /* Custom scrollbar */
+    ::-webkit-scrollbar {
+      width: 8px;
+    }
+    
+    ::-webkit-scrollbar-track {
+      background: #f1f1f1;
+      border-radius: 10px;
+    }
+    
+    ::-webkit-scrollbar-thumb {
+      background: linear-gradient(180deg, #f09433 0%, #dc2743 100%);
+      border-radius: 10px;
+    }
+    
+    /* Responsive */
+    @media (max-width: 480px) {
+      .container {
+        padding: 30px 20px;
+      }
+      
+      h1 {
+        font-size: 24px;
+      }
+    }
   </style>
 </head>
 <body>
-<div class="container">
-  <h1>ระบบจองห้องประชุม BKI-Meeting Room</h1>
+  <div class="container">
+    <h1>ระบบจองห้องประชุม</h1>
+    <p class="subtitle">noobitguy</p>
+    
+    <form id="bookingForm">
+      <div class="form-group">
+        <label for="room">เลือกห้องประชุม <span>*</span></label>
+        <select id="room" name="room" required>
+          <option value="">-- กรุณาเลือกห้อง --</option>
+          <option value="ห้องประชุมชั้น 4 (จำนวน 18 ที่นั่ง)">ห้องประชุมชั้น 4 (จำนวน 18 ที่นั่ง)</option>
+          <option value="ห้องประชุม 3 (ชั้น 3 จำนวน 30 ที่นั่ง)">ห้องประชุม 3 (ชั้น 3 จำนวน 30 ที่นั่ง)</option>
+          <option value="ห้องประชุม 2 (ชั้น 3 จำนวน 50 ที่นั่ง)">ห้องประชุม 2 (ชั้น 3 จำนวน 50 ที่นั่ง)</option>
+          <option value="ห้องประชุม 1 (ชั้น 3 จำนวน 250 ทั้นั่ง)">ห้องประชุม 1 (ชั้น 3 จำนวน 250 ทั้นั่ง)</option>
+          <option value="ห้องประชุมนิทรรศการ (ชั้น 3 จำนวน 25 ที่นั่ง)">ห้องประชุมนิทรรศการ (ชั้น 3 จำนวน 25 ที่นั่ง)</option>
+          <option value="ห้องประชุมวิจัย (ชั้น 3)">ห้องประชุมวิจัย (ชั้น 3)</option>
+          <option value="ห้องสมุดฯ (ชั้น 3)">ห้องสมุดฯ (ชั้น 3)</option>
+        </select>
+      </div>
 
-  <label>เลือกห้องประชุม</label>
-  <select id="room">
-    <option value="">-- เลือกห้อง --</option>
-    <option>ห้องประชุมชั้น 4</option>
-    <option>ห้องประชุม 3</option>
-    <option>ห้องประชุม 2</option>
-    <option>ห้องประชุม 1</option>
-    <option>ห้องประชุมนิทรรศการ</option>
-    <option>ห้องประชุมวิจัย</option>
-    <option>ห้องสมุดฯ</option>
-  </select>
+      
+      <div class="form-group">
+        <label for="date">วันที่ต้องการจอง <span>*</span></label>
+        <input type="date" id="date" name="date" required>
+      </div>
+      
+      <div class="form-group">
+        <label for="startTime">เวลาเริ่มจอง <span>*</span></label>
+        <select id="startTime" name="startTime" required disabled>
+          <option value="">-- กรุณาเลือกห้องและวันที่ก่อน --</option>
+        </select>
+      </div>
+      
+      <div class="form-group">
+        <label for="endTime">เวลาสิ้นสุด <span>*</span></label>
+        <select id="endTime" name="endTime" required disabled>
+          <option value="">-- กรุณาเลือกเวลาเริ่มก่อน --</option>
+        </select>
+      </div>
+      
+      <div class="form-group">
+        <label for="name">ชื่อผู้จอง <span>*</span></label>
+        <input type="text" id="name" name="name" required placeholder="กรอกชื่อ-นามสกุล">
+      </div>
+      
+      <div class="form-group">
+        <label for="phone">เบอร์ติดต่อกลับ <span>*</span></label>
+        <input type="tel" id="phone" name="phone" required pattern="[0-9]{10}" placeholder="0812345678">
+      </div>
+      
+      <button type="submit" id="submitBtn">บันทึกการจอง</button>
+    </form>
+    
+    <div class="loading">
+      <div class="spinner"></div>
+      <p>กำลังประมวลผล...</p>
+    </div>
+    
+    <div id="message" class="message"></div>
+  </div>
 
-  <label>เลือกวันที่</label>
-  <input type="date" id="date">
-
-  <label>เวลาเริ่มจอง</label>
-  <select id="startTime"><option value="">-- เลือกเวลา --</option></select>
-
-  <label>เวลาจบ</label>
-  <select id="endTime"><option value="">-- เลือกเวลา --</option></select>
-
-  <label>ชื่อผู้จอง</label>
-  <input type="text" id="name" placeholder="ชื่อผู้จอง">
-
-  <label>เบอร์ติดต่อกลับ</label>
-  <input type="text" id="phone" placeholder="เบอร์โทร">
-
-  <button onclick="submitReservation()">จองห้อง</button>
-  <div id="status"></div>
-
-  <div id="calendar"></div>
-</div>
-
-<script>
-  let calendar;
-
-  function generateHalfHourSlots() {
-    const slots = [];
-    for (let h = 8; h <= 17; h++) {
-      slots.push(`${String(h).padStart(2,'0')}:00`);
-      if (h !== 17) slots.push(`${String(h).padStart(2,'0')}:30`);
-    }
-    return slots;
-  }
-
-  function updateTimes() {
-    const startSelect = document.getElementById('startTime');
-    const endSelect = document.getElementById('endTime');
-    startSelect.innerHTML = '<option value="">-- เลือกเวลา --</option>';
-    endSelect.innerHTML = '<option value="">-- เลือกเวลา --</option>';
-
-    const slots = generateHalfHourSlots();
-    slots.forEach(slot => {
-      const option = document.createElement('option');
-      option.value = slot;
-      option.text = slot;
-      startSelect.add(option);
-
-      const opt2 = document.createElement('option');
-      opt2.value = slot;
-      opt2.text = slot;
-      endSelect.add(opt2);
-    });
-  }
-
-  function updateEndTimes() {
-    const startTime = document.getElementById('startTime').value;
-    const endSelect = document.getElementById('endTime');
-    if (!startTime) return;
-
-    const slots = generateHalfHourSlots();
-    endSelect.innerHTML = '<option value="">-- เลือกเวลา --</option>';
-    const startIndex = slots.indexOf(startTime);
-
-    for (let i = startIndex + 1; i < slots.length; i++) {
-      const option = document.createElement('option');
-      option.value = slots[i];
-      option.text = slots[i];
-      endSelect.add(option);
-    }
-  }
-
-  function submitReservation() {
-    const data = {
-      room: document.getElementById('room').value,
-      date: document.getElementById('date').value,
-      startTime: document.getElementById('startTime').value,
-      endTime: document.getElementById('endTime').value,
-      name: document.getElementById('name').value,
-      phone: document.getElementById('phone').value
+  <script>
+    // ตั้งวันที่ขั้นต่ำเป็นวันนี้
+    window.onload = function() {
+      var today = new Date();
+      var dd = String(today.getDate()).padStart(2, '0');
+      var mm = String(today.getMonth() + 1).padStart(2, '0');
+      var yyyy = today.getFullYear();
+      today = yyyy + '-' + mm + '-' + dd;
+      document.getElementById('date').setAttribute('min', today);
     };
-
-    if (!data.room || !data.date || !data.startTime || !data.endTime || !data.name || !data.phone) {
-      document.getElementById('status').innerText = '❌ กรุณากรอกข้อมูลให้ครบทุกช่อง';
-      return;
-    }
-
-    document.getElementById('status').innerText = 'กำลังบันทึก...';
-
-    google.script.run.withSuccessHandler(function(res) {
-      if (res.status === 'success') {
-        document.getElementById('status').innerText = '✅ จองห้องสำเร็จ';
-        loadCalendar();
+    
+    // Event listeners
+    document.getElementById('room').addEventListener('change', updateAvailableSlots);
+    document.getElementById('date').addEventListener('change', updateAvailableSlots);
+    document.getElementById('startTime').addEventListener('change', updateEndTimeSlots);
+    document.getElementById('bookingForm').addEventListener('submit', handleSubmit);
+    
+    // ฟังก์ชันอัพเดท time slots ที่ว่าง
+    function updateAvailableSlots() {
+      var room = document.getElementById('room').value;
+      var date = document.getElementById('date').value;
+      var startTimeSelect = document.getElementById('startTime');
+      var endTimeSelect = document.getElementById('endTime');
+      
+      // Reset เวลาเริ่มและเวลาจบ
+      startTimeSelect.innerHTML = '<option value="">-- กำลังโหลด... --</option>';
+      startTimeSelect.disabled = true;
+      endTimeSelect.innerHTML = '<option value="">-- กรุณาเลือกเวลาเริ่มก่อน --</option>';
+      endTimeSelect.disabled = true;
+      
+      if (room && date) {
+        // เรียกใช้ฟังก์ชันจาก backend
+        google.script.run
+          .withSuccessHandler(function(availableSlots) {
+            startTimeSelect.innerHTML = '';
+            
+            if (availableSlots.length === 0) {
+              startTimeSelect.innerHTML = '<option value="">-- ไม่มีเวลาว่าง --</option>';
+            } else {
+              startTimeSelect.innerHTML = '<option value="">-- เลือกเวลาเริ่ม --</option>';
+              for (var i = 0; i < availableSlots.length; i++) {
+                var option = document.createElement('option');
+                option.value = availableSlots[i];
+                option.textContent = availableSlots[i] + ' น.';
+                startTimeSelect.appendChild(option);
+              }
+              startTimeSelect.disabled = false;
+            }
+          })
+          .withFailureHandler(function(error) {
+            showMessage('เกิดข้อผิดพลาดในการโหลดเวลาที่ว่าง', 'error');
+            console.error(error);
+          })
+          .getAvailableTimeSlots(date, room);
       } else {
-        document.getElementById('status').innerText = '❌ ' + res.message;
+        startTimeSelect.innerHTML = '<option value="">-- กรุณาเลือกห้องและวันที่ก่อน --</option>';
       }
-    }).saveReservation(data);
-  }
-
-  function loadCalendar() {
-    const room = document.getElementById('room').value;
-    const date = document.getElementById('date').value;
-    if (!room || !date) return;
-
-    google.script.run.withSuccessHandler(function(reservations){
-      const events = [];
-      reservations.filter(r => r.room === room).forEach(r => {
-        events.push({
-          title: `จองแล้ว: ${r.name}`,
-          start: `${date}T${r.start}`,
-          end: `${date}T${r.end}`,
-          color: 'red'
-        });
-      });
-
-      const calendarEl = document.getElementById('calendar');
-      if(calendar) calendar.destroy();
-      calendar = new FullCalendar.Calendar(calendarEl, {
-        initialView: 'timeGridDay',
-        slotMinTime: '08:00:00',
-        slotMaxTime: '17:00:00',
-        allDaySlot: false,
-        events: events
-      });
-      calendar.render();
-    }).getReservationsByDate(date);
-  }
-
-  document.getElementById('room').addEventListener('change', ()=>{ updateTimes(); loadCalendar(); });
-  document.getElementById('date').addEventListener('change', ()=>{ updateTimes(); loadCalendar(); });
-  document.getElementById('startTime').addEventListener('change', updateEndTimes);
-
-  updateTimes();
-</script>
+    }
+    
+    // ฟังก์ชันอัพเดทเวลาสิ้นสุด
+    function updateEndTimeSlots() {
+      var room = document.getElementById('room').value;
+      var date = document.getElementById('date').value;
+      var startTime = document.getElementById('startTime').value;
+      var endTimeSelect = document.getElementById('endTime');
+      
+      endTimeSelect.innerHTML = '<option value="">-- กำลังโหลด... --</option>';
+      endTimeSelect.disabled = true;
+      
+      if (room && date && startTime) {
+        google.script.run
+          .withSuccessHandler(function(availableEndTimes) {
+            endTimeSelect.innerHTML = '';
+            
+            if (availableEndTimes.length === 0) {
+              endTimeSelect.innerHTML = '<option value="">-- ไม่มีเวลาว่าง --</option>';
+            } else {
+              endTimeSelect.innerHTML = '<option value="">-- เลือกเวลาสิ้นสุด --</option>';
+              for (var i = 0; i < availableEndTimes.length; i++) {
+                var option = document.createElement('option');
+                option.value = availableEndTimes[i];
+                option.textContent = availableEndTimes[i] + ' น.';
+                endTimeSelect.appendChild(option);
+              }
+              endTimeSelect.disabled = false;
+            }
+          })
+          .withFailureHandler(function(error) {
+            showMessage('เกิดข้อผิดพลาดในการโหลดเวลาสิ้นสุด', 'error');
+            console.error(error);
+          })
+          .getAvailableEndTimes(date, room, startTime);
+      } else {
+        endTimeSelect.innerHTML = '<option value="">-- กรุณาเลือกเวลาเริ่มก่อน --</option>';
+      }
+    }
+    
+    // ฟังก์ชันจัดการการ submit form
+    function handleSubmit(e) {
+      e.preventDefault();
+      
+      var submitBtn = document.getElementById('submitBtn');
+      var loading = document.querySelector('.loading');
+      
+      // ตรวจสอบข้อมูล
+      var formData = {
+        room: document.getElementById('room').value,
+        date: document.getElementById('date').value,
+        startTime: document.getElementById('startTime').value,
+        endTime: document.getElementById('endTime').value,
+        name: document.getElementById('name').value,
+        phone: document.getElementById('phone').value
+      };
+      
+      // แสดง loading
+      submitBtn.disabled = true;
+      loading.style.display = 'block';
+      hideMessage();
+      
+      // ตรวจสอบการจองซ้ำก่อนบันทึก
+      google.script.run
+        .withSuccessHandler(function(isDuplicate) {
+          if (isDuplicate) {
+            showMessage('เวลาที่เลือกมีการจองแล้ว กรุณาเลือกเวลาอื่น', 'error');
+            submitBtn.disabled = false;
+            loading.style.display = 'none';
+          } else {
+            // บันทึกการจอง
+            google.script.run
+              .withSuccessHandler(function(result) {
+                if (result.success) {
+                  showMessage(result.message, 'success');
+                  document.getElementById('bookingForm').reset();
+                  // Reset dropdowns
+                  document.getElementById('startTime').innerHTML = '<option value="">-- กรุณาเลือกห้องและวันที่ก่อน --</option>';
+                  document.getElementById('startTime').disabled = true;
+                  document.getElementById('endTime').innerHTML = '<option value="">-- กรุณาเลือกเวลาเริ่มก่อน --</option>';
+                  document.getElementById('endTime').disabled = true;
+                  // Reset min date
+                  var today = new Date();
+                  var dd = String(today.getDate()).padStart(2, '0');
+                  var mm = String(today.getMonth() + 1).padStart(2, '0');
+                  var yyyy = today.getFullYear();
+                  today = yyyy + '-' + mm + '-' + dd;
+                  document.getElementById('date').setAttribute('min', today);
+                } else {
+                  showMessage(result.message, 'error');
+                }
+                submitBtn.disabled = false;
+                loading.style.display = 'none';
+              })
+              .withFailureHandler(function(error) {
+                showMessage('เกิดข้อผิดพลาด: ' + error.toString(), 'error');
+                submitBtn.disabled = false;
+                loading.style.display = 'none';
+              })
+              .saveReservation(formData);
+          }
+        })
+        .withFailureHandler(function(error) {
+          showMessage('เกิดข้อผิดพลาดในการตรวจสอบ: ' + error.toString(), 'error');
+          submitBtn.disabled = false;
+          loading.style.display = 'none';
+        })
+        .checkDuplicateBooking(formData.date, formData.room, formData.startTime, formData.endTime);
+    }
+    
+    // ฟังก์ชันแสดงข้อความ
+    function showMessage(text, type) {
+      var messageDiv = document.getElementById('message');
+      messageDiv.textContent = text;
+      messageDiv.className = 'message ' + type;
+      messageDiv.style.display = 'block';
+      
+      // ซ่อนข้อความหลังจาก 5 วินาที
+      setTimeout(function() {
+        hideMessage();
+      }, 5000);
+    }
+    
+    // ฟังก์ชันซ่อนข้อความ
+    function hideMessage() {
+      var messageDiv = document.getElementById('message');
+      messageDiv.style.display = 'none';
+    }
+  </script>
 </body>
 </html>
